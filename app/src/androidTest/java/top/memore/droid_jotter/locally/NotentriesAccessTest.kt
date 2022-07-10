@@ -32,87 +32,109 @@ class NotentriesAccessTest {
 
     @Test
     @Throws(Exception::class)
-    fun insertEntities_obtainOrphanNotentries_noCategorizedNotes() {
-        val c = Catentry(cId = System.currentTimeMillis(), name = "One")
+    fun getNonexistentNotentry_noNotentryLoaded() {
+        val n = dao.getOneNotentry(10L)
+
+        Assert.assertNull(n)
+    }
+
+    @Test
+    @Throws(Exception::class)
+    fun insertNotentriesWithoutParent_notentriesInserted() {
+        val cateId = 10L
         val n1 = Notentry(nId = 101L, title = "One", brief = "The is Note One", ymdate = null)
         val n2 =
             Notentry(nId = 102L, title = "Two", brief = "The is Note Two", ymdate = null).apply {
-                categoId = c.cId + 1L
+                this.cateId = cateId
             }
-
-        dao.insertCatentry(c)
-        dao.insertNotentry(n1)
-        dao.insertNotentry(n2)
-        val orphanNotes = dao.getOrphanNotentries()
-        val categoNotes = dao.getCategorizedNotes(c.cId)
+        // without catentry inserted
+        dao.insertNotentries(n1, n2)
+        val orphanNotes = dao.getLiteNotes()
+        val categoNotes = dao.getLiteNotes(cateId)
 
         Assert.assertEquals(2, orphanNotes.size)
-        Assert.assertTrue(orphanNotes.contains(n1))
-        Assert.assertTrue(orphanNotes.contains(n2))
+        Assert.assertTrue(orphanNotes.any {
+            it.nId == n1.nId && it.title == n1.title
+        })
+        Assert.assertTrue(orphanNotes.any {
+            it.nId == n2.nId && it.title == n2.title
+        })
         Assert.assertTrue(categoNotes.isEmpty())
     }
 
     @Test
     @Throws(Exception::class)
-    fun insertEntities_obtainCategorizedNotes_noOrphanNotentries() {
-        val c = Catentry(cId = System.currentTimeMillis(), name = "One")
+    fun insertCategorizedNotentries_categorizedNotesInserted() {
+        val c = Category(nId = System.currentTimeMillis(), title = "" /* not null */)
         val n1 =
             Notentry(nId = 101L, title = "One", brief = "The is Note One", ymdate = null).apply {
-                categoId = c.cId
+                cateId = c.nId
             }
         val n2 =
             Notentry(nId = 102L, title = "Two", brief = "The is Note Two", ymdate = null).apply {
-                categoId = c.cId
+                cateId = c.nId
             }
 
-        dao.insertCatentry(c)
-        dao.insertNotentry(n1)
-        dao.insertNotentry(n2)
-        val categoNotes = dao.getCategorizedNotes(c.cId)
-        val orphanNotes = dao.getOrphanNotentries()
+        dao.insertCategories(c)
+        dao.insertNotentries(n1, n2)
+        val categoNotes = dao.getLiteNotes(c.nId)
+        val orphanNotes = dao.getLiteNotes()
 
         Assert.assertEquals(2, categoNotes.size)
-        Assert.assertTrue(categoNotes.contains(n1))
-        Assert.assertTrue(categoNotes.contains(n2))
+        Assert.assertTrue(categoNotes.any {
+            it.nId == n1.nId && it.title == n1.title
+        })
+        Assert.assertTrue(categoNotes.any {
+            it.nId == n2.nId && it.title == n2.title
+        })
         Assert.assertTrue(orphanNotes.isEmpty())
     }
 
     @Test
     @Throws(Exception::class)
-    fun insertEntities_oneCategorizedNote_oneOrphanNotentry_successfully() {
-        val c = Catentry(cId = System.currentTimeMillis(), name = "One")
+    fun insertNotentries_oneCategorizedNote_twoOrphanNotentries_threeNotesInserted() {
+        val c1 = Category(nId = 11L, title = "One")
+        val c2 = Category(nId = 12L, title = "not null")
         val n1 = Notentry(
             nId = 101L,
             title = "The is Note One",
-            brief = null,
+            brief = "n",
             ymdate = ymd(y = 2000, m = MONTH_MIN, d = DAY_OF_MONTH_MIN)
         ).apply {
-            categoId = c.cId
+            cateId = c1.nId
         }
         val n2 = Notentry(
             nId = 102L,
             title = "The is Note Two",
-            brief = null,
+            brief = "not null",
             ymdate = ymd(y = 2000, m = MONTH_MIN, d = DAY_OF_MONTH_MIN)
+        )
+        val n3 = Notentry(
+            nId = 103L,
+            title = "The is Note Three",
+            brief = "n",
+            ymdate = null
         ).apply {
-            categoId = c.cId + 1L
+            cateId = c2.nId
         }
 
-        dao.insertCatentry(c)
-        dao.insertNotentry(n1)
-        dao.insertNotentry(n2)
+        dao.insertCategories(c1)
+        dao.insertNotentries(n1, n2, n3)
 
-        val categoNotes = dao.getCategorizedNotes(c.cId)
-        val orphanNotes = dao.getOrphanNotentries()
+        val categoNotes = dao.getLiteNotes(c1.nId)
+        val orphanNotes = dao.getLiteNotes()
 
         Assert.assertEquals(1, categoNotes.size)
-        Assert.assertEquals(n1.title, categoNotes[0].title)
-        Assert.assertNotNull(categoNotes[0].ymdate)
-        Assert.assertFalse(categoNotes[0].deleting)
-        Assert.assertEquals(1, orphanNotes.size)
-        Assert.assertEquals(n2.title, orphanNotes[0].title)
-        Assert.assertNotNull(orphanNotes[0].ymdate)
-        Assert.assertFalse(orphanNotes[0].deleting)
+        Assert.assertTrue(categoNotes.any {
+            it.nId == n1.nId && it.title == n1.title
+        })
+        Assert.assertEquals(2, orphanNotes.size)
+        Assert.assertTrue(orphanNotes.any {
+            it.nId == n2.nId && it.title == n2.title
+        })
+        Assert.assertTrue(orphanNotes.any {
+            it.nId == n3.nId && it.title == n3.title
+        })
     }
 
     @Test(expected = SQLiteException::class)
@@ -122,8 +144,7 @@ class NotentriesAccessTest {
         val n2 =
             Notentry(nId = n1.nId, title = "Second", brief = "The is second Note", ymdate = null)
 
-        dao.insertNotentry(n1)
-        dao.insertNotentry(n2)
+        dao.insertNotentries(n1, n2)
     }
 
     @Test(expected = SQLiteException::class)
@@ -136,7 +157,7 @@ class NotentriesAccessTest {
                 brief = "The is first Note",
                 ymdate = null
             ).apply {
-                categoId = 10L
+                cateId = 10L
             }
         val n2 =
             Notentry(
@@ -145,45 +166,15 @@ class NotentriesAccessTest {
                 brief = "The is second Note",
                 ymdate = null
             ).apply {
-                categoId = n1.categoId
+                cateId = n1.cateId
             }
 
-        dao.insertNotentry(n1)
-        dao.insertNotentry(n2)
+        dao.insertNotentries(n1, n2)
     }
 
     @Test
     @Throws(Exception::class)
-    fun upsertTwoNotentries_withOneCreated_anotherOneUpdated() {
-        val c = Catentry(cId = System.currentTimeMillis(), name = "One")
-        val n1 =
-            Notentry(nId = 101L, title = "Note One", brief = "The is Note One", ymdate = null)
-        val n2 =
-            Notentry(
-                nId = 102L,
-                title = "Note Two",
-                brief = "The is Note Two",
-                ymdate = null
-            ).apply {
-                categoId = c.cId
-            }
-        val n11 = n1.copy(ymdate = ymd(y = 2000, m = MONTH_MIN, d = DAY_OF_MONTH_MIN)).apply {
-            categoId = c.cId
-        }
-
-        dao.insertCatentry(c)
-        dao.upsertNotentries(n1, n2, n11)
-        val notes = dao.getNotentries()
-
-        Assert.assertEquals(2, notes.size)
-        Assert.assertFalse(notes.contains(n1))
-        Assert.assertTrue(notes.contains(n2))
-        Assert.assertTrue(notes.contains(n11))
-    }
-
-    @Test
-    @Throws(Exception::class)
-    fun insertTwoOrphanNotentries_withSameTitle_successfullyInsert() {
+    fun insertTwoCategorizedNotes_withNullCategoAndSameTitle_noConflicts() {
         val n1 =
             Notentry(
                 nId = 110L,
@@ -199,178 +190,252 @@ class NotentriesAccessTest {
                 ymdate = null
             )
 
-        dao.insertNotentry(n1)
-        dao.insertNotentry(n2)
-        val orphanNotes = dao.getOrphanNotentries()
+        dao.insertNotentries(n1, n2)
 
+        Assert.assertEquals(2, dao.getLiteNotes().size)
+    }
+
+    @Test
+    @Throws(Exception::class)
+    fun upsertTwoNotentries_oneCreated_anotherOneUpdated() {
+        val c = Category(nId = System.currentTimeMillis(), title = "One")
+        val n1 =
+            Notentry(nId = 101L, title = "Note One", brief = "The is Note One", ymdate = null)
+        val n2 =
+            Notentry(
+                nId = 102L,
+                title = "Note Two",
+                brief = "The is Note Two",
+                ymdate = null
+            ).apply {
+                cateId = c.nId
+            }
+        val n11 =
+            n1.copy(title = "Some", ymdate = ymd(y = 2000, m = MONTH_MIN, d = DAY_OF_MONTH_MIN))
+                .apply {
+                    cateId = c.nId
+                }
+
+        dao.upsertCategories(c)
+        dao.upsertNotentries(n1, n2, n11)
+        val notes = dao.getLiteNotes(c.nId)
+
+        Assert.assertEquals(2, notes.size)
+        Assert.assertFalse(notes.any {
+            it.nId == n1.nId && it.title == n1.title
+        })
+        Assert.assertTrue(notes.any {
+            it.nId == n2.nId && it.title == n2.title
+        })
+        Assert.assertTrue(notes.any {
+            it.nId == n11.nId && it.title == n11.title
+        })
+    }
+
+    @Test
+    @Throws(Exception::class)
+    fun insertTwoOrphanNotentries_differentCategoIds_sameTitle_twoNotesInsert() {
+        val n1 =
+            Notentry(
+                nId = 110L,
+                title = "Note",
+                brief = "The is first Note",
+                ymdate = null
+            ).apply {
+                cateId = 10L
+            }
+        val n2 =
+            Notentry(
+                nId = 120L,
+                title = n1.title,
+                brief = "The is second Note",
+                ymdate = null
+            )
+
+        dao.insertNotentries(n1, n2)
+        val categoNotes = dao.getLiteNotes(10L)
+        val orphanNotes = dao.getLiteNotes()
+
+        Assert.assertEquals(0, categoNotes.size)
         Assert.assertEquals(2, orphanNotes.size)
-        Assert.assertTrue(orphanNotes.contains(n1))
-        Assert.assertTrue(orphanNotes.contains(n2))
+        Assert.assertTrue(orphanNotes.any {
+            it.nId == n1.nId && it.title == n1.title
+        })
+        Assert.assertTrue(orphanNotes.any {
+            it.nId == n2.nId && it.title == n2.title
+        })
     }
 
     @Test
     @Throws(Exception::class)
     fun updateOneOrphanNotentry_oneUpdated() {
         val n1 = Notentry(nId = 100L, title = "First", brief = "The is first Note", ymdate = null)
-        val n2 = n1.copy(title = "Second").apply {
-            millitime = n1.millitime + 1
-        }
+        val n11 = n1.copy(title = "Second")
 
-        dao.insertNotentry(n1)
-        dao.updateNotentry(n2)
+        dao.insertNotentries(n1)
+        val updated = dao.updateNotentries(n11)
 
-        val notes = dao.getOrphanNotentries()
+        val notes = dao.getLiteNotes()
 
+        Assert.assertEquals(1, updated)
         Assert.assertEquals(1, notes.size)
-        Assert.assertEquals(n2.title, notes[0].title)
-        Assert.assertEquals(n1.brief, notes[0].brief)
+        Assert.assertTrue(notes.any {
+            it.nId == n11.nId && it.title == n11.title
+        })
     }
 
     @Test
     @Throws(Exception::class)
-    fun updateNonexistent_noOneUpdated() {
+    fun updateNonexistent_noUpdated() {
         val n1 = Notentry(nId = 100L, title = "First", brief = "The is first Note", ymdate = null)
 
-        val updated = dao.updateNotentry(n1)
+        val updated = dao.updateNotentries(n1)
 
         Assert.assertEquals(0, updated)
     }
 
     @Test
     @Throws(Exception::class)
-    fun updateOrphanNotentryToCategorized__oneUpdatedToCategorizedNote() {
-        val c = Catentry(cId = 10L, name = "One")
+    fun updateOrphanNotentryToCategorized__oneUpdated() {
+        val c = Category(nId = 10L, title = "One")
         val n1 = Notentry(nId = 100L, title = "First", brief = "The is first Note", ymdate = null)
-        val n2 = n1.copy(title = "Second").apply {
-            categoId = c.cId
+        val n11 = n1.copy(title = "Second").apply {
+            cateId = c.nId
         }
-        dao.insertCatentry(c)
-        dao.insertNotentry(n1)
-        dao.updateNotentry(n2)
-        val orphanNotes = dao.getOrphanNotentries()
-        val categoNotes = dao.getCategorizedNotes(c.cId)
+        dao.insertCategories(c)
+        dao.insertNotentries(n1)
 
+        val updated = dao.updateNotentries(n11)
+
+        val orphanNotes = dao.getLiteNotes()
+        val categoNotes = dao.getLiteNotes(c.nId)
+        Assert.assertEquals(1, updated)
         Assert.assertEquals(0, orphanNotes.size)
         Assert.assertEquals(1, categoNotes.size)
-        Assert.assertEquals(n2.title, categoNotes[0].title)
-        Assert.assertEquals(n1.brief, categoNotes[0].brief)
+        Assert.assertTrue(categoNotes.any {
+            it.nId == n11.nId && it.title == n11.title
+        })
     }
 
     @Test(expected = SQLiteException::class)
     @Throws(Exception::class)
-    fun updateCategorizedNote_withExistingCategoAndTitle_failedToUpdate() {
-        val c = Catentry(cId = 10L, name = "One")
-        val n1 = Notentry(nId = 100L, title = "First", brief = "The is first Note", ymdate = null)
-        val n2 = n1.copy(nId = 200L, title = "Second").apply {
-            categoId = c.cId
-        }
+    fun updateCategorizedNote_withCategoAndTitleUniqueConflict_failedToUpdate() {
+        val c = Category(nId = 10L, title = "One")
+        val n1 = Notentry(nId = 100L, title = "First", brief = "The first Note", ymdate = null)
+        val n2 =
+            Notentry(nId = 200L, title = "Second", brief = "Second Note", ymdate = null).apply {
+                cateId = c.nId
+            }
         val n11 = n1.copy(title = n2.title, brief = "This is the third note").apply {
-            categoId = c.cId
+            cateId = c.nId
         }
-        dao.insertCatentry(c)
-        dao.insertNotentry(n1)
-        dao.insertNotentry(n2)
-        dao.updateNotentry(n11)
+
+        dao.insertCategories(c)
+        dao.insertNotentries(n1, n2)
+        dao.updateNotentries(n11)
     }
 
     @Test
     @Throws(Exception::class)
-    fun deleteOrphanNotentry_oneDeleted() {
+    fun updateUsableNotentryAsUseless_oneUpdated() {
         val n = Notentry(nId = 100L, title = "First", brief = "The is first Note", ymdate = null)
-        dao.insertNotentry(n)
+        dao.upsertNotentries(n)
+        val n1 = dao.getOneNotentry(n.nId)
+        Assert.assertNotNull(n1)
+        n1?.let {
+            Assert.assertTrue(it.millitime > 0)
+        }
 
-        val deleted = dao.deleteNotentry(n.nId)
+        val updated = dao.updateNotentryAsUseless(n.nId)
 
-        Assert.assertEquals(1, deleted)
+        Assert.assertEquals(1, updated)
+        val n2 = dao.getOneNotentry(n.nId)
+        Assert.assertNotNull(n2)
+        n2?.let {
+            Assert.assertTrue(it.millitime < 0)
+        }
     }
 
     @Test
     @Throws(Exception::class)
-    fun deleteCategorizedNote_oneDeleted() {
-        val c = Catentry(cId = 10L, name = "One")
+    fun updateUselessNotentryAsUsable_oneUpdated() {
         val n = Notentry(
             nId = 100L,
             title = "First",
             brief = "The is first Note",
-            ymdate = null
-        ).apply {
-            categoId = c.cId
+            ymdate = null,
+            millitime = -1000L
+        )
+        dao.upsertNotentries(n)
+        val n1 = dao.getOneNotentry(n.nId)
+        Assert.assertNotNull(n1)
+        n1?.let {
+            Assert.assertTrue(it.millitime < 0)
         }
-        dao.insertCatentry(c)
-        dao.insertNotentry(n)
 
-        val deleted = dao.deleteNotentry(n.nId)
+        val updated = dao.updateNotentryAsUsable(n.nId)
 
-        Assert.assertEquals(1, deleted)
-    }
-
-    @Test
-    @Throws(Exception::class)
-    fun deleteNonexistent_noDeleted() {
-        val deleted = dao.deleteNotentry(100L)
-
-        Assert.assertEquals(0, deleted)
+        Assert.assertEquals(1, updated)
+        val n2 = dao.getOneNotentry(n.nId)
+        Assert.assertNotNull(n2)
+        n2?.let {
+            Assert.assertTrue(it.millitime > 0)
+        }
     }
 
     @Test
     fun deleteExistingNotentries_existentDeleted() {
-        val c = Catentry(cId = System.currentTimeMillis(), name = "One")
+        val c = Category(nId = System.currentTimeMillis(), title = "One")
         val n1 = Notentry(
             nId = 101L,
             title = "The is Note One",
-            brief = null,
+            brief = "not null",
             ymdate = ymd(y = 2000, m = MONTH_MIN, d = DAY_OF_MONTH_MIN)
         ).apply {
-            categoId = c.cId
+            cateId = c.nId
         }
         val n2 = Notentry(
             nId = 102L,
             title = "The is Note Two",
-            brief = null,
+            brief = "not null",
             ymdate = ymd(y = 2000, m = MONTH_MIN, d = DAY_OF_MONTH_MIN)
-        ).apply {
-            categoId = c.cId + 1L
-        }
-        dao.insertCatentry(c)
-        dao.insertNotentry(n1)
-        dao.insertNotentry(n2)
+        )
+        dao.upsertCategories(c)
+        dao.upsertNotentries(n1, n2)
 
-        Assert.assertEquals(2, dao.getNotentries().size)
+        Assert.assertEquals(1, dao.getLiteNotes().size)
+        Assert.assertEquals(1, dao.getLiteNotes(c.nId).size)
 
-        dao.deleteNotentries(n1, n2)
+        val deleted = dao.deleteNotentries(n1, n2)
 
-        Assert.assertEquals(0, dao.getNotentries().size)
+        Assert.assertEquals(2, deleted)
     }
 
     @Test
-    fun deleteExistingNotentries_andOneNonexistent_existentDeleted() {
-        val c = Catentry(cId = System.currentTimeMillis(), name = "One")
+    fun deleteNotentries_onlyExistentDeleted() {
         val n1 = Notentry(
             nId = 101L,
             title = "The is Note One",
-            brief = null,
+            brief = "not null",
             ymdate = ymd(y = 2000, m = MONTH_MIN, d = DAY_OF_MONTH_MIN)
         ).apply {
-            categoId = c.cId
+            cateId = 10L
         }
         val n2 = Notentry(
             nId = 102L,
             title = "The is Note Two",
-            brief = null,
+            brief = "not null",
             ymdate = ymd(y = 2000, m = MONTH_MIN, d = DAY_OF_MONTH_MIN)
-        ).apply {
-            categoId = c.cId + 1L
-        }
+        )
         val n3 = Notentry(nId = 100L, title = "First", brief = "The is first Note", ymdate = null)
-        dao.insertCatentry(c)
-        dao.insertNotentry(n1)
-        dao.insertNotentry(n2)
+        dao.upsertNotentries(n1, n2)
 
-        Assert.assertEquals(2, dao.getNotentries().size)
+        Assert.assertEquals(2, dao.getLiteNotes().size)
 
-        dao.deleteNotentries(n1, n2, n3)
+        val deleted = dao.deleteNotentries(n1, n2, n3)
 
-        Assert.assertEquals(0, dao.getNotentries().size)
+        Assert.assertEquals(2, deleted)
+        Assert.assertEquals(0, dao.getLiteNotes().size)
     }
 
 }

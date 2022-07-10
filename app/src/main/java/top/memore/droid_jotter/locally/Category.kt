@@ -1,21 +1,15 @@
 package top.memore.droid_jotter.locally
 
 import androidx.room.Entity
-import androidx.room.Ignore
 import androidx.room.Index
 import androidx.room.PrimaryKey
 
 @Entity(
-    tableName = "notentries",
-    indices = [Index(value = ["cateId", "title"], unique = true)]
+    tableName = "categories",
+    indices = [Index(value = ["title"], unique = true)]
 )
-data class Notentry(
+data class Category(
     @PrimaryKey val nId: Long,
     val title: String,
-    val brief: String?,
-    val ymdate: Int?,
     val millitime: Long = System.currentTimeMillis()
-) {
-    var cateId: Long? = null
-
-}
+)

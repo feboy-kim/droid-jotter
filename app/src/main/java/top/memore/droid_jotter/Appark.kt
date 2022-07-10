@@ -1,7 +1,7 @@
 package top.memore.droid_jotter
 
-const val NAME_MAX_LENGTH = 100
-const val TEXT_MAX_LENGTH = 900
+const val TITLE_MAX_LENGTH = 100
+const val BRIEF_MAX_LENGTH = 900
 
 const val MONTH_MIN: Byte = 1
 const val MONTH_MAX: Byte = 12

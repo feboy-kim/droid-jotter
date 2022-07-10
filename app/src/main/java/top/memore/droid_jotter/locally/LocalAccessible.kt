@@ -6,52 +6,66 @@ import androidx.room.*
 interface LocalAccessible {
 
     /*
-    * Catentry access
+    * Category access
     * */
-    @Query("SELECT * FROM catentries")
-    fun getCatentries(): List<Catentry>
+    @Query("SELECT nId, title, millitime FROM categories")
+    fun getCategories(): List<Litentry>
 
-    @Insert
-    fun insertCatentry(c: Catentry)
+    @Query("SELECT nId, title, millitime FROM categories WHERE nId = :id")
+    fun getOneCategory(id: Long): Litentry?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun upsertCatentries(vararg cs: Catentry)
+    fun upsertCategories(vararg cs: Category)
+
+    @Insert
+    fun insertCategories(vararg cs: Category)
 
     @Update
-    fun updateCatentry(c: Catentry): Int
+    fun updateCategories(vararg cs: Category): Int
 
     @Delete
-    fun deleteCatentries(vararg cs: Catentry)
+    fun deleteCategories(vararg cs: Category): Int
 
-    @Query("DELETE FROM catentries WHERE cId = :id")
-    fun deleteCatentry(id: Long): Int
+    @Query("UPDATE categories SET millitime = 0 - millitime WHERE nId = :id AND millitime > 0")
+    fun updateCategoryAsUseless(id: Long): Int
+
+    @Query("UPDATE categories SET millitime = 0 - millitime WHERE nId = :id AND millitime < 0")
+    fun updateCategoryAsUsable(id: Long): Int
 
     /*
     * Notentry access
     * */
-    @Query("SELECT * FROM notentries")
-    fun getNotentries(): List<Notentry>
+    @Query(
+        "SELECT nId, title, millitime FROM notentries WHERE cateId IS NULL OR " +
+                "cateId NOT IN (SELECT nId FROM categories WHERE categories.millitime > 0)"
+    )
+    fun getLiteNotes(): List<Litentry>
 
-    @Insert
-    fun insertNotentry(n: Notentry)
+    @Query(
+        "SELECT nId, title, millitime FROM notentries WHERE cateId IS NOT NULL and cateId = :pId " +
+                "AND cateId IN (SELECT nId FROM categories WHERE categories.millitime > 0)"
+    )
+    fun getLiteNotes(pId: Long): List<Litentry>
+
+    @Query("SELECT * FROM notentries WHERE nId = :id")
+    fun getOneNotentry(id: Long): Notentry?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun upsertNotentries(vararg ns: Notentry)
 
+    @Insert
+    fun insertNotentries(vararg ns: Notentry)
+
     @Update
-    fun updateNotentry(n: Notentry): Int
+    fun updateNotentries(vararg ns: Notentry): Int
 
     @Delete
-    fun deleteNotentries(vararg ns: Notentry)
+    fun deleteNotentries(vararg ns: Notentry): Int
 
-    @Query("DELETE FROM notentries WHERE nId = :id")
-    fun deleteNotentry(id: Long): Int
+    @Query("UPDATE notentries SET millitime = 0 - millitime WHERE nId = :id AND millitime > 0")
+    fun updateNotentryAsUseless(id: Long): Int
 
-    @Query("SELECT * FROM notentries WHERE categoId = :pId")
-    fun getCategorizedNotes(pId: Long): List<Notentry>
-
-    @Query("SELECT * FROM notentries " +
-            "WHERE categoId IS NULL OR categoId NOT IN (SELECT cId FROM catentries)")
-    fun getOrphanNotentries(): List<Notentry>
+    @Query("UPDATE notentries SET millitime = 0 - millitime WHERE nId = :id AND millitime < 0")
+    fun updateNotentryAsUsable(id: Long): Int
 
 }
