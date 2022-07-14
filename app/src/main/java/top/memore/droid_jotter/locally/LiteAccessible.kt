@@ -3,16 +3,13 @@ package top.memore.droid_jotter.locally
 import androidx.room.*
 
 @Dao
-interface LocalAccessible {
+interface LiteAccessible {
 
     /*
     * Category access
     * */
     @Query("SELECT nId, title, millitime FROM categories")
     fun getCategories(): List<Litentry>
-
-    @Query("SELECT nId, title, millitime FROM categories WHERE nId = :id")
-    fun getOneCategory(id: Long): Litentry?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun upsertCategories(vararg cs: Category)
@@ -36,8 +33,8 @@ interface LocalAccessible {
     * Notentry access
     * */
     @Query(
-        "SELECT nId, title, millitime FROM notentries WHERE cateId IS NULL OR " +
-                "cateId NOT IN (SELECT nId FROM categories WHERE categories.millitime > 0)"
+        "SELECT nId, title, millitime FROM notentries WHERE cateId IS NULL OR NOT EXISTS " +
+                "(SELECT * FROM categories AS c WHERE c.millitime > 0 AND c.nId = cateId)"
     )
     fun getLiteNotes(): List<Litentry>
 

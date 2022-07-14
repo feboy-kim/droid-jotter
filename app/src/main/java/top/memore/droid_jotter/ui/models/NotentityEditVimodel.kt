@@ -5,6 +5,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
 @HiltViewModel
-class NotentryEditVimodel @Inject constructor(): ViewModel() {
+class NotentityEditVimodel @Inject constructor(): ViewModel() {
 
 }

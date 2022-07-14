@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">Droid Jotter</string>
+    <string name="categories_list">Categories</string>
+    <string name="category_editor">Edit Category</string>
+    <string name="notentries_list">Memo Notes</string>
+    <string name="notentry_editor">Edit Memo Note</string>
 </resources>

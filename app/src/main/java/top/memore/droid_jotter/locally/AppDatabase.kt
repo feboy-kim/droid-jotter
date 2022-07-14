@@ -9,7 +9,7 @@ import androidx.room.RoomDatabase
     entities = [Category::class, Notentry::class], version = 1, exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
-    abstract fun getAccessor(): LocalAccessible
+    abstract fun getAccessor(): LiteAccessible
 
     companion object {
         fun getTestDatabase(cx: Context) =

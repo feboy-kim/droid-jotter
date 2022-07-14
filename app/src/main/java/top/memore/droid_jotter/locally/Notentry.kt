@@ -13,7 +13,7 @@ data class Notentry(
     @PrimaryKey val nId: Long,
     val title: String,
     val brief: String?,
-    val ymdate: Int?,
+    val ymday: Int?,
     val millitime: Long = System.currentTimeMillis()
 ) {
     var cateId: Long? = null

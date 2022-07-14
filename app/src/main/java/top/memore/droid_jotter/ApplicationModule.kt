@@ -8,12 +8,8 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
-import top.memore.droid_jotter.cloudy.CloudAccessible
-import top.memore.droid_jotter.cloudy.CloudataAccessor
-import top.memore.droid_jotter.cloudy.Cloudeal
-import top.memore.droid_jotter.datany.Parentaline
 import top.memore.droid_jotter.locally.AppDatabase
-import top.memore.droid_jotter.locally.LocalAccessible
+import top.memore.droid_jotter.locally.LiteAccessible
 import javax.inject.Singleton
 
 @Module
@@ -38,6 +34,6 @@ object ApplicationModule {
 
     @Provides
     @Singleton
-    fun provideLocalAccessible(db: AppDatabase): LocalAccessible = db.getAccessor()
+    fun provideLocalAccessible(db: AppDatabase): LiteAccessible = db.getAccessor()
 
 }

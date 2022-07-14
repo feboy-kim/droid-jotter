@@ -1,9 +1,5 @@
 package top.memore.droid_jotter.datany
 
-import top.memore.droid_jotter.cloudy.CloudAccessible
-import top.memore.droid_jotter.locally.LocalAccessible
-import javax.inject.Inject
-
 //class CategoriesRepositImpl @Inject constructor(
 //    private val localine: LocalAccessible,
 //    private val cloudata: CloudAccessible
