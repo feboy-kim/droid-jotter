@@ -15,29 +15,31 @@ import top.memore.droid_jotter.models.Litentity
 import javax.inject.Inject
 
 @HiltViewModel
-class CategoryListVimodel @Inject constructor(
+class MasterVimodel @Inject constructor(
     private val reposit: LocalRepository
 ) : ViewModel() {
-    private val _items = mutableStateOf<List<Litentity>>(emptyList())
-    val items: State<List<Litentity>> = _items
-    private val _event = MutableStateFlow(AccessEvent(Eventype.OTHERS))
-    val event: StateFlow<AccessEvent> = _event
+    private val _categories = mutableStateOf<List<Litentity>>(emptyList())
+    val categories: State<List<Litentity>> = _categories
+
+    private val _selected = mutableStateOf(categoryForOrphanotes)
+    val selected: State<Litentity> = _selected
+
+    private val _failEvent = MutableStateFlow(AccessEvent(Eventype.OTHERS))
+    val failEvent: StateFlow<AccessEvent> = _failEvent
 
     init {
         viewModelScope.launch {
             try {
-                _items.value = reposit.loadCategories()
+                val items = listOf(categoryForOrphanotes) + reposit.loadCategories().filter { it.isUsable }
+                _categories.value = items.sortedBy { it.nId }
             } catch (e: Throwable) {
-                _event.value = AccessEvent(Eventype.LOADING_FAILED)
+                _failEvent.value = AccessEvent(Eventype.LOADING_FAILED)
             }
         }
     }
 
-    fun updateOneAsUseless(id: Long) {
-        val newList = _items.value.filter {
-            it.nId != id
-        }
-        _items.value = newList
+    companion object {
+        val categoryForOrphanotes = Litentity(0L, "")
     }
 
 }

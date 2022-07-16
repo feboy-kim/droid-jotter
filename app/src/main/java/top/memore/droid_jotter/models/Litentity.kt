@@ -8,11 +8,11 @@ data class Litentity(
     val nId: Long,
     val title: String
 ) {
-    var millitime: Long = 0L    // can be changed from negative to positive for comparing last time
+    var millitime: Long = 0L
 
     constructor(d: Litentry) : this(nId = d.nId, title = d.title)
 
-    val isUsable: Boolean get() = millitime > 0  // cannot be changed
+    val isUsable: Boolean get() = millitime > 0
     var isMarked: Boolean = false
 
     val isValid: Boolean

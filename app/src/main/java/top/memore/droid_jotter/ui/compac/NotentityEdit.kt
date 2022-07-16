@@ -5,11 +5,9 @@ import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.lifecycle.viewmodel.compose.viewModel
-import top.memore.droid_jotter.ui.models.NotentityEditVimodel
 
 @Composable
-fun NotentityEdit(vm: NotentityEditVimodel = viewModel()) {
+fun NotentityEdit() {
     Column {
         OutlinedTextField(value = "", onValueChange = {
 

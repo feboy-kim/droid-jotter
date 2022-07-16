@@ -16,7 +16,7 @@ import top.memore.droid_jotter.models.Litentity
 import javax.inject.Inject
 
 @HiltViewModel
-class LiteNoteListVimodel @Inject constructor(
+class SearchingVimodel @Inject constructor(
     private val reposit: LocalRepository
 ) : ViewModel() {
     var notes by mutableStateOf<List<Litentity>>(listOf())
@@ -24,18 +24,26 @@ class LiteNoteListVimodel @Inject constructor(
     private val _event = MutableStateFlow(AccessEvent(Eventype.OTHERS))
     val event: StateFlow<AccessEvent> = _event
 
-    fun loadNotes(id: Long = 0L) {
-        viewModelScope.launch {
-            try {
-                notes = if (id == 0L) reposit.loadLiteNotes() else reposit.loadLiteNotes(id)
-            } catch (e: Exception) {
-                _event.value = AccessEvent(Eventype.LOADING_FAILED)
+    private lateinit var parent: Litentity
+
+    fun loadNotes(c: Litentity) {
+        if (!::parent.isInitialized) {
+            parent = c
+            viewModelScope.launch {
+                try {
+                    notes =
+                        if (parent.nId == 0L) reposit.loadLiteNotes() else reposit.loadLiteNotes(
+                            parent.nId
+                        )
+                } catch (e: Exception) {
+                    _event.value = AccessEvent(Eventype.LOADING_FAILED)
+                }
             }
         }
     }
 
-//    fun updateOneAsUseless(id: Long) {
-//
-//    }
+    fun findata(kw: String) {
+
+    }
 
 }

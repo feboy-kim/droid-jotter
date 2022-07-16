@@ -26,8 +26,8 @@ class LiteNoteListVimodelTests {
     @Test
     fun loadOrphanLiteNotes_withException_failure(): Unit = runTest {
         coEvery { reposit.loadLiteNotes() } throws Exception()
-        val vm = LiteNoteListVimodel(reposit)
-        vm.loadNotes()
+        val vm = SearchingVimodel(reposit)
+        vm.loadNotes(Litentity(0L, ""))
 
         val event = vm.event.first()
 
@@ -49,8 +49,8 @@ class LiteNoteListVimodelTests {
         }   // useless
         val ts = listOf(t1, t2, t3)
 
-        val vm = LiteNoteListVimodel(reposit)
-        vm.loadNotes()
+        val vm = SearchingVimodel(reposit)
+        vm.loadNotes(Litentity(0L, ""))
 //        reposit.emit(AccessState.Success(ts))
 
 //        Assert.assertFalse(vm.notes.value is AccessState.Failure)
@@ -71,8 +71,8 @@ class LiteNoteListVimodelTests {
 
     @Test
     fun loadCategorizedNotes_withException_failure(): Unit = runTest {
-        val vm = LiteNoteListVimodel(reposit)
-        vm.loadNotes(10L)
+        val vm = SearchingVimodel(reposit)
+//        vm.loadNotes(10L)
 //        reposit.emit(AccessState.Failure(Exception()))
 
 //        Assert.assertTrue(vm.notes.value is AccessState.Failure)
@@ -91,8 +91,8 @@ class LiteNoteListVimodelTests {
         }   // useless
         val ts = listOf(t1, t2, t3)
 
-        val vm = LiteNoteListVimodel(reposit)
-        vm.loadNotes(10L)
+        val vm = SearchingVimodel(reposit)
+//        vm.loadNotes(10L)
 //        reposit.emit(AccessState.Success(ts))
 
 //        Assert.assertFalse(vm.notes.value is AccessState.Failure)

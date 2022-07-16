@@ -8,8 +8,7 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.ui.Modifier
 import dagger.hilt.android.AndroidEntryPoint
-import top.memore.droid_jotter.ui.compac.CategoryList
-import top.memore.droid_jotter.ui.compac.LiteNoteList
+import top.memore.droid_jotter.ui.compac.MasterScreen
 import top.memore.droid_jotter.ui.theme.DroidJotterTheme
 
 @AndroidEntryPoint
@@ -23,7 +22,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colors.background
                 ) {
-                    CategoryList()
+                    MasterScreen()
                 }
             }
         }

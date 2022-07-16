@@ -28,8 +28,7 @@ class RepositSaveNotentryTests(
 
     @Test
     fun saveNotentity_withoutError_successWithBoolean() = runTest {
-        val dispatcher = StandardTestDispatcher(testScheduler)
-        val repository = LocalRepositImpl(localine, dispatcher)
+        val repository = LocalRepositImpl(localine)
         every { localine.upsertNotentries(any()) } returns Unit
 
         val saved = repository.saveNotentry(10L, entity)

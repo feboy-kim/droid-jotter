@@ -12,7 +12,7 @@ import org.junit.Test
 import top.memore.droid_jotter.datany.LocalRepository
 import top.memore.droid_jotter.models.Litentity
 
-class CategoryListVimodelTests {
+class MasterVimodelTests {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
@@ -24,11 +24,11 @@ class CategoryListVimodelTests {
     }
 
     @Test
-    fun initiallyLoadata_withException_failure() = runTest {
+    fun initiallyLoadCategories_withException_failure() = runTest {
         coEvery { reposit.loadCategories() } throws Exception()
-        val vm = CategoryListVimodel(reposit)
+        val vm = MasterVimodel(reposit)
 
-        val event = vm.event.first()
+        val event = vm.failEvent.first()
 
         coVerify { reposit.loadCategories() }
         Assert.assertNotNull(event.notHandledContent)
@@ -36,7 +36,7 @@ class CategoryListVimodelTests {
     }
 
     @Test
-    fun initiallyLoadata_withoutError_success() = runTest {
+    fun initiallyLoadCategories_withoutError_success() = runTest {
         val c1 = Litentity(nId = 11L, title = "A").also {
             it.millitime = 101L
         }    // usable
@@ -47,22 +47,19 @@ class CategoryListVimodelTests {
             it.millitime = -103L
         }   // useless
         val cs = listOf(c1, c2, c3)
+        coEvery { reposit.loadCategories() } returns cs
 
-        val vm = CategoryListVimodel(reposit)
-//        reposit.emit(AccessState.Success(cs))
+        val vm = MasterVimodel(reposit)
 
-//        Assert.assertFalse(vm.items.value is AccessState.Failure)
-//        Assert.assertEquals(AccessState.Success(cs), vm.items.value)
-//        (vm.items.value as? AccessState.Success)?.d?.let { list ->
-//            Assert.assertEquals(cs, list)
-//            val usables = list.filter { it.isUsable }
-//            Assert.assertEquals(2, usables.size)
-//            Assert.assertTrue(usables.any { it.nId == c1.nId && it.title == c1.title })
-//            Assert.assertTrue(usables.any { it.nId == c2.nId && it.title == c2.title })
-//            val useless = list.filter { !it.isUsable }
-//            Assert.assertEquals(1, useless.size)
-//            Assert.assertTrue(useless.any { it.nId == c3.nId && it.title == c3.title })
-//            Assert.assertFalse(useless[0].isUsable)     // isUsable cannot be changed
-//        }
+        coVerify { reposit.loadCategories() }
+        Assert.assertEquals(3, vm.categories.value.size)
+        vm.categories.value.let {
+            Assert.assertEquals(MasterVimodel.categoryForOrphanotes, it.first())
+            Assert.assertTrue(it.contains(c1))
+            Assert.assertTrue(it.contains(c2))
+            Assert.assertFalse(it.contains(c3))
+        }
+        Assert.assertEquals(MasterVimodel.categoryForOrphanotes, vm.selected.value)
     }
+
 }

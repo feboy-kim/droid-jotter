@@ -28,8 +28,7 @@ class RepositSaveCategoryTests(
 
     @Test
     fun saveValidCategory_withoutError_successWithTrue() = runTest {
-        val dispatcher = StandardTestDispatcher(testScheduler)
-        val repository = LocalRepositImpl(localine, dispatcher)
+        val repository = LocalRepositImpl(localine)
         every { localine.upsertCategories(any()) } returns Unit
 
         val saved = repository.saveCategory(entity)
